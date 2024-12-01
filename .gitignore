@@ -1,0 +1,6 @@
+input*.txt
+.hashtags*
+target/
+main
+a.out
+compile_flags.txt
