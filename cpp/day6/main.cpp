@@ -31,7 +31,7 @@ const std::unordered_map<char, std::pair<int, int>> mMoveDirs = {
    { '<', { -1, 0 } }
 };
 
-int part1(std::vector<std::string> map) {
+int part1(std::span<std::string> map) {
    auto iterY = std::ranges::find_if(map, [](std::string_view str) { return str.contains('^') or str.contains('>') or str.contains('v') or str.contains('<'); });
    assert(iterY != map.end());
    int posY = std::distance(map.begin(), iterY);
@@ -39,8 +39,6 @@ int part1(std::vector<std::string> map) {
    
    int nVisited = 1;
    char curDir = map[posY][posX];
-
-   map[posY][posX] = 'X';
 
    const auto isValidCoord = [&map](int x, int y) {
       return y >= 0 and y < map.size() and x >= 0 and x < map[y].length();
@@ -125,7 +123,7 @@ int part2(std::span<const std::string> map) {
    for (auto y = 0z; y < map.size(); ++y) {
       const auto& line = map[y];
       for (auto x = 0z; x < line.length(); ++x) { 
-         if (line[x] == '#')
+         if (line[x] != 'X')
             continue;
          if (has_cycle_with_obstacle(map, std::make_pair(posX, posY), startDir, std::make_pair(x, y))) {
             ++nNumObstacles;
@@ -158,14 +156,8 @@ int main() {
 
    std::vector<std::string> vInput{ lines.begin(), lines.end() };
 
-   auto nFutPart1 = std::async(std::launch::async, [](const std::vector<std::string>& v) {
-      return part1(v);
-   }, vInput);   
-   auto nFutPart2 = std::async(std::launch::async, [](const std::vector<std::string>& v) {
-      return part2(v);
-   }, vInput);   
-   const auto nPart1 = nFutPart1.get();
+   const auto nPart1 = part1(vInput);
    std::cout << "Result Part 1 = " << nPart1 << "\n";
-   const auto nPart2 = nFutPart2.get();
+   const auto nPart2 = part2(vInput);
    std::cout << "Result Part 2 = " << nPart2 << "\n";
 }
