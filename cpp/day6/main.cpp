@@ -139,7 +139,7 @@ int part2(std::span<const std::string> map) {
       }
    }
    return std::transform_reduce(vFuts.begin(), vFuts.end(),
-         0, [](int acc, int x) { return acc + x; }, [](std::future<int>& fut) { return fut.get(); });
+         0, std::plus{}, [](std::future<int>& fut) { return fut.get(); });
 }
 int main() {
 //    const std::string data = "....#.....\n\
