@@ -1,6 +1,7 @@
 #include <future>
 #include <iostream>
 #include <map>
+#include <numeric>
 #include <ranges>
 #include <unordered_map>
 #include <vector>
@@ -9,6 +10,7 @@
 #include <span>
 #include <fstream>
 #include <cassert>
+#include <future>
 
 constexpr char rotate(char dir) {
    switch (dir) {
@@ -111,7 +113,7 @@ bool has_cycle_with_obstacle(std::span<const std::string> map, std::pair<int, in
 }
 
 int part2(std::span<const std::string> map) {
-   auto iterY = std::ranges::find_if(map, [](std::string_view str) { return str.contains('^') or str.contains('>') or str.contains('v') or str.contains('<'); });
+   auto iterY = std::ranges::find_if(map, [](std::string_view str) { return str.find_first_of("^>v<") != std::string::npos; });
    assert(iterY != map.end());
    const int posY = std::distance(map.begin(), iterY);
    const int posX = iterY->find_first_of("^>v<");
@@ -120,15 +122,23 @@ int part2(std::span<const std::string> map) {
    
    char curDir = map[posY][posX];
    int nNumObstacles{}; 
+   std::vector<std::future<int>> vFuts{};
+   vFuts.reserve(map.front().length());
    for (auto y = 0z; y < map.size(); ++y) {
       const auto& line = map[y];
+      vFuts.clear();
       for (auto x = 0z; x < line.length(); ++x) { 
          if (line[x] != 'X')
             continue;
-         if (has_cycle_with_obstacle(map, std::make_pair(posX, posY), startDir, std::make_pair(x, y))) {
-            ++nNumObstacles;
-         }
+         vFuts.push_back(std::async(std::launch::async, [&map, posX, posY, startDir, x, y]() {
+            if (has_cycle_with_obstacle(map, std::make_pair(posX, posY), startDir, std::make_pair(x, y))) {
+               return 1;
+            }
+            return 0;
+         }));
       }
+      nNumObstacles += std::transform_reduce(vFuts.begin(), vFuts.end(),
+            0, [](int acc, int x) { return acc + x; }, [](std::future<int>& fut) { return fut.get(); });
    }
    return nNumObstacles;
 }
