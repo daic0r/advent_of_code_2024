@@ -121,12 +121,12 @@ int part2(std::span<const std::string> map) {
    const char startDir = map[posY][posX]; 
    
    char curDir = map[posY][posX];
-   int nNumObstacles{}; 
+
    std::vector<std::future<int>> vFuts{};
-   vFuts.reserve(map.front().length());
+   vFuts.reserve(map.front().length() * map.size());
+
    for (auto y = 0z; y < map.size(); ++y) {
       const auto& line = map[y];
-      vFuts.clear();
       for (auto x = 0z; x < line.length(); ++x) { 
          if (line[x] != 'X')
             continue;
@@ -137,10 +137,9 @@ int part2(std::span<const std::string> map) {
             return 0;
          }));
       }
-      nNumObstacles += std::transform_reduce(vFuts.begin(), vFuts.end(),
-            0, [](int acc, int x) { return acc + x; }, [](std::future<int>& fut) { return fut.get(); });
    }
-   return nNumObstacles;
+   return std::transform_reduce(vFuts.begin(), vFuts.end(),
+         0, [](int acc, int x) { return acc + x; }, [](std::future<int>& fut) { return fut.get(); });
 }
 int main() {
 //    const std::string data = "....#.....\n\
