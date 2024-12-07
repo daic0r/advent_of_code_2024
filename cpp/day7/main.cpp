@@ -49,7 +49,7 @@ constexpr std::span<const operator_t> get_operators(int nPart) {
 constexpr bool solve_equation(std::uint64_t nTarget, std::span<std::uint64_t> vData, std::optional<std::uint64_t> acc, std::span<const operator_t> operators) {
    if (vData.size() == 1) {
       for (const auto& op : operators) {
-         const auto result = !acc ? vData.front() : op.second(*acc, vData.front());
+         const auto result = op.second(*acc, vData.front());
          if (result == nTarget) {
             return true;
          }
@@ -73,7 +73,7 @@ constexpr bool solve_equation(std::uint64_t nTarget, std::span<std::uint64_t> vD
 
 constexpr std::uint64_t solve(std::span<sEquation> equations, int nPart) {
    auto tmp = equations
-      | std::views::transform([nPart,cnt=0](sEquation& eq) mutable { 
+      | std::views::transform([nPart](sEquation& eq) { 
          return std::make_pair(eq.nResult, solve_equation(eq.nResult, eq.vData, std::nullopt, get_operators(nPart)));
       });
 
@@ -81,11 +81,9 @@ constexpr std::uint64_t solve(std::span<sEquation> equations, int nPart) {
 
    auto valid_results = intermediate_results
       | std::views::filter([](const std::pair<std::uint64_t, bool>& res) { return res.second; })
-      | std::views::transform([cnt=0](const auto& p) mutable { 
+      | std::views::transform([](const auto& p) { 
          return p.first; 
       });
-
-   // std::vector<std::uint64_t> v{ valid_results.begin(), valid_results.end() };
 
    return std::reduce(valid_results.begin(), valid_results.end(), 0ull);
 }
