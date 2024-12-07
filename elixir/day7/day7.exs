@@ -1,4 +1,8 @@
 defmodule Day7 do
+  def concat_numbers(a, b) do
+    a * (Integer.pow(10, trunc(:math.log10(b)) + 1)) + b 
+  end
+
   defp get_operators(1), do: [ {:add, &+/2}, {:mul, &*/2} ]
   defp get_operators(2), do: [ 
     {:add, &+/2},
@@ -6,7 +10,7 @@ defmodule Day7 do
     {:concat, fn left, right ->
       case {left, right}do
         {nil, _} -> right
-        _ -> String.to_integer(Integer.to_string(left) <> Integer.to_string(right))
+        _ -> concat_numbers(left, right)
       end
     end}
   ]
