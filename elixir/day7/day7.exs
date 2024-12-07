@@ -1,5 +1,5 @@
 defmodule Day7 do
-  def concat_numbers(a, b) do
+  defp concat_numbers(a, b) do
     a * (Integer.pow(10, trunc(:math.log10(b)) + 1)) + b 
   end
 
