@@ -35,9 +35,9 @@ int solve(int nPart) {
             if (nPart == 1) {
                const auto loc1 = *iter + dist;
                const auto loc2 = *iter_from - dist;
-               if (loc1.x >= 0 and loc1.x < nWidth and loc1.y >= 0 and loc1.y < nHeight)
+               if (is_in_bounds(loc1, nWidth, nHeight))
                   sAntinodes.insert(loc1);
-               if (loc2.x >= 0 and loc2.x < nWidth and loc2.y >= 0 and loc2.y < nHeight)
+               if (is_in_bounds(loc2, nWidth, nHeight))
                   sAntinodes.insert(loc2);
             } else 
             if (nPart == 2) {
