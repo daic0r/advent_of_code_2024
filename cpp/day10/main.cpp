@@ -89,7 +89,7 @@ long part(std::span<const std::string_view> vInput) {
    }
 
    long nSum{};
-   for (const auto [idx, start] : vTrailheads | std::views::enumerate) {
+   for (const auto start : vTrailheads) {
       const auto vEnds = std::invoke([&start, vInput] {
          if constexpr(N == 1)
             return find_trailhead_ends<std::set>(vInput, start);
