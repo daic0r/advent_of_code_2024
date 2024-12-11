@@ -18,7 +18,6 @@ long get_num_digits(long n) {
 }
 
 std::pair<long, long> split_number(long n) {
-   const auto nNumDigits = get_num_digits(n);
    const auto div = static_cast<long>(std::pow(10, static_cast<long>(std::log10(n)) / 2 + 1));
    return { n / div, n % div };
 }
