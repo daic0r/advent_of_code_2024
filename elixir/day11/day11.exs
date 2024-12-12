@@ -4,7 +4,7 @@ defmodule Day11 do
   end
 
   def split_number(num) do
-    divisor = trunc(:math.pow(10, div(trunc(:math.log10(num)), 2) + 1))
+    divisor = 10 ** (div(trunc(:math.log10(num)), 2) + 1)
     { div(num, divisor), rem(num, divisor) }
   end
 
