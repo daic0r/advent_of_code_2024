@@ -1,0 +1,112 @@
+#include <charconv>
+#include <iostream>
+#include <vector>
+#include <ranges>
+#include <unordered_map>
+#include <fstream>
+#include <string>
+#include <regex>
+
+struct sAction {
+   char cButton;
+   int nMoveX{}, nMoveY{};
+   int nTokens{};
+};
+
+std::ostream& operator<<(std::ostream& os, const sAction& ac) {
+   std::cout << "Button: " << ac.cButton << ": X=" << ac.nMoveX << ", Y=" << ac.nMoveY << "\n";
+   std::cout << "Tokens: " << ac.nTokens;
+   return os;
+}
+
+struct sMachine {
+   std::vector<sAction> vActions{};
+   int nTargetX{}, nTargetY{};
+};
+
+std::ostream& operator<<(std::ostream& os, const sMachine& mc) {
+   for (const auto& ac : mc.vActions) {
+
+   }
+}
+
+
+int main() {
+
+   using namespace std::literals;
+
+   const std::string strData = "Button A: X+94, Y+34\n\
+Button B: X+22, Y+67\n\
+Prize: X=8400, Y=5400\n\
+\n\
+Button A: X+26, Y+66\n\
+Button B: X+67, Y+21\n\
+Prize: X=12748, Y=12176\n\
+\n\
+Button A: X+17, Y+86\n\
+Button B: X+84, Y+37\n\
+Prize: X=7870, Y=6450\n\
+\n\
+Button A: X+69, Y+23\n\
+Button B: X+27, Y+71\n\
+Prize: X=18641, Y=10279";
+
+   auto tmp = strData
+      | std::views::split("\n\n"sv)
+      | std::views::transform([](auto rng) { return std::string_view{ rng.begin(), rng.end() }; })
+      | std::views::filter([](std::string_view strMachine) { return not strMachine.empty(); })
+      | std::views::transform([](std::string_view strMachine) {
+         auto lines = strMachine
+            | std::views::split('\n')
+            | std::views::transform([](auto rng) { return std::string_view{ rng.begin(), rng.end() }; })
+            | std::views::filter([](std::string_view strMachine) { return not strMachine.empty(); });
+
+         const std::regex rex_button{ R"(Button (.): X\+(\d+), Y\+(\d+))" };
+         std::smatch match;
+
+         sMachine mach{};
+
+         auto iter = lines.begin();
+         for (auto i = 0z; i < 2; ++i) {
+            const std::string line1{ *iter++ };
+            if (std::regex_match(line1, match, rex_button)) {
+               char cButton = match[1].str()[0];
+               int nMoveX, nMoveY;
+               const std::string strMoveX = match[2].str(), strMoveY = match[3].str();
+               std::from_chars(strMoveX.data(), strMoveX.data() + strMoveX.length(), nMoveX);
+               std::from_chars(strMoveY.data(), strMoveY.data() + strMoveY.length(), nMoveY);
+
+               sAction ac{ cButton, nMoveX, nMoveY, 1 };
+               if (cButton == 'A') {
+                  ac.nTokens = 3;
+                  mach.vActions.push_back(ac);
+               } else {
+                  mach.vActions.push_back(ac);
+                  auto ac2 = ac;
+                  auto ac3 = ac;
+                  ac2.nMoveX = ac.nMoveX * 2;
+                  ac2.nMoveY = ac.nMoveY * 2;
+                  ac2.nTokens = 2;
+                  ac3.nMoveX = ac.nMoveX * 3;
+                  ac3.nMoveY = ac.nMoveY * 3;
+                  ac3.nTokens = 3;
+                  mach.vActions.push_back(ac2);
+                  mach.vActions.push_back(ac3);
+               }
+            }
+         }
+
+         const std::regex rex_target{ R"(Prize: X=(\d+), Y=(\d+))" };
+         const std::string line_target{ *iter };
+         if (std::regex_match(line_target, match, rex_target)) {
+            const std::string strTargetX{ match[1].str() };   
+            const std::string strTargetY{ match[2].str() };   
+            std::from_chars(strTargetX.data(), strTargetX.data() + strTargetX.length(), mach.nTargetX);
+            std::from_chars(strTargetY.data(), strTargetY.data() + strTargetY.length(), mach.nTargetY);
+         }
+         return mach;
+      });
+   
+   std::vector<sMachine> v{ tmp.begin(), tmp.end() };
+
+}
