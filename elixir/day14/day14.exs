@@ -1,20 +1,7 @@
 defmodule Day14 do
   def simulate({{pos_x, pos_y}, {vel_x, vel_y}}, iterations, width, height) do
-    new_pos_x = rem(pos_x + (vel_x * iterations), width)
-    new_pos_y = rem(pos_y + (vel_y * iterations), height)
-
-    new_pos_x = 
-      if new_pos_x < 0 do
-        width + new_pos_x     
-      else
-        new_pos_x
-      end
-    new_pos_y = 
-      if new_pos_y < 0 do
-        height + new_pos_y     
-      else
-        new_pos_y
-      end
+    new_pos_x = Integer.mod(pos_x + (vel_x * iterations), width)
+    new_pos_y = Integer.mod(pos_y + (vel_y * iterations), height)
 
     {new_pos_x, new_pos_y}
   end
@@ -23,24 +10,12 @@ defmodule Day14 do
     robots = input 
       |> Enum.map(&simulate(&1, 100, width, height))
 
-    quad1 = robots
-      |> Enum.count(fn {pos_x, pos_y} ->
-        pos_x < div(width, 2) and pos_y < div(height, 2)
+    for op1 <- [&</2, &>/2], op2 <- [&</2, &>/2] do
+      Enum.count(robots, fn {pos_x, pos_y} -> 
+        op1.(pos_x, div(width, 2)) and op2.(pos_y, div(height, 2))
       end)
-    quad2 = robots
-      |> Enum.count(fn {pos_x, pos_y} ->
-        pos_x < div(width, 2) and pos_y > div(height, 2)
-      end)
-    quad3 = robots
-      |> Enum.count(fn {pos_x, pos_y} ->
-        pos_x > div(width, 2) and pos_y < div(height, 2)
-      end)
-    quad4 = robots
-      |> Enum.count(fn {pos_x, pos_y} ->
-        pos_x > div(width, 2) and pos_y > div(height, 2)
-      end)
-
-    quad1 * quad2 * quad3 * quad4
+    end
+      |> Enum.product
   end
 
   def part2(input, width, height) do
