@@ -130,33 +130,37 @@ long solve(std::span<std::string_view> vInput) {
       }
    }
 
+   const auto iter = std::ranges::find_if(sCache, [](const sTraverseInfo& info) { return info.bIsTarget; });
    if constexpr(N == 1) {
-      const auto iter = std::ranges::find_if(sCache, [](const sTraverseInfo& info) { return info.bIsTarget; });
       if (iter != sCache.end()) {
          std::cout << "Found target\n";
          return iter->nCost;
       }
+   } else {
+      long nTiles{};
+      backtrack(sCache, iter->pos, nTiles);
+      return nTiles;
    }
 
    return -1;
 }
 
 int main() {
-//    const std::string strData = "###############\n\
-// #.......#....E#\n\
-// #.#.###.#.###.#\n\
-// #.....#.#...#.#\n\
-// #.###.#####.#.#\n\
-// #.#.#.......#.#\n\
-// #.#.#####.###.#\n\
-// #...........#.#\n\
-// ###.#.#####.#.#\n\
-// #...#.....#.#.#\n\
-// #.#.#.###.#.#.#\n\
-// #.....#...#.#.#\n\
-// #.###.#.#.#.#.#\n\
-// #S..#.....#...#\n\
-// ###############";
+   const std::string strData = "###############\n\
+#.......#....E#\n\
+#.#.###.#.###.#\n\
+#.....#.#...#.#\n\
+#.###.#####.#.#\n\
+#.#.#.......#.#\n\
+#.#.#####.###.#\n\
+#...........#.#\n\
+###.#.#####.#.#\n\
+#...#.....#.#.#\n\
+#.#.#.###.#.#.#\n\
+#.....#...#.#.#\n\
+#.###.#.#.#.#.#\n\
+#S..#.....#...#\n\
+###############";
 
 //    const std::string strData = "#################\n\
 // #...#...#...#..E#\n\
@@ -176,9 +180,9 @@ int main() {
 // #S#.............#\n\
 // #################";
 
-   std::ifstream f{ "input.txt" };
-   const std::string strData{ std::istreambuf_iterator<char>{ f }, std::istreambuf_iterator<char>{} };
-   f.close();
+   // std::ifstream f{ "input.txt" };
+   // const std::string strData{ std::istreambuf_iterator<char>{ f }, std::istreambuf_iterator<char>{} };
+   // f.close();
 
    auto tmp = strData
       | std::views::split('\n')
@@ -188,6 +192,8 @@ int main() {
    std::vector<std::string_view> vInput{ tmp.begin(), tmp.end() };
 
    const auto nPart1 = solve<1>(vInput);
-
    std::cout << "Result Part 1 = " << nPart1 << "\n";
+
+   const auto nPart2 = solve<2>(vInput);
+   std::cout << "Result Part 2 = " << nPart2 << "\n";
 }
