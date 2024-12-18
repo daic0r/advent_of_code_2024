@@ -1,7 +1,10 @@
+#include <cassert>
+#include <format>
 #include <iostream>
 #include <queue>
 #include <ranges>
 #include <set>
+#include <utility>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -99,8 +102,22 @@ int part1(std::span<std::vector<char>> vMap) {
          }
       }
    }
+
    auto iter = std::ranges::find_if(sCache, [target](const auto& p) { return p.pos == target; });
-   return iter->nCost;
+   if (iter != sCache.end())
+      return iter->nCost;
+   return -1;
+}
+
+std::string part2(std::vector<std::vector<char>> vMap, std::span<const sCoord> vObstacles) {
+   for (auto i = 1024z; i < vObstacles.size(); ++i) {
+      const auto obst = vObstacles[i];
+      vMap[obst.y][obst.x] = '#';
+      const auto nCost = part1(vMap);
+      if (nCost == -1)
+         return std::format("{},{}", obst.x, obst.y);
+   }
+   std::unreachable();
 }
 
 int main() {
@@ -144,8 +161,9 @@ int main() {
       });
    
    std::vector<std::vector<char>> vMap(71, std::vector<char>(71, '.'));
+   const std::vector<sCoord> vObstacles { tmp.begin(), tmp.end() };
 
-   auto iter = tmp.begin();
+   auto iter = vObstacles.begin();
    for (auto i = 0z; i < 1024; ++i) {
       auto coord = *iter++;
       vMap[coord.y][coord.x] = '#';
@@ -159,4 +177,7 @@ int main() {
 
    const auto nPart1 = part1(vMap); 
    std::cout << "Result Part 1 = " << nPart1 << "\n";
+
+   const auto nPart2 = part2(vMap, vObstacles); 
+   std::cout << "Result Part 2 = " << nPart2 << "\n";
 }
