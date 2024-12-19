@@ -1,89 +1,48 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
-#include <map>
 #include <numeric>
 #include <vector>
 #include <ranges>
 #include <fstream>
 #include <string>
-#include <stack>
 
 using namespace std::literals;
 
-bool is_pattern_possible(std::string_view strPattern, std::span<const std::string_view> vAvail, int nDepth = 0) {
-   std::map<std::string, bool> memo;
-   std::stack<std::string> s;
+constexpr long get_possible_patterns(std::string_view strPattern, std::span<const std::string_view> vAvail, std::unordered_map<std::string_view, long>& memo) {
+   if (const auto iter = memo.find(strPattern); iter != memo.end()) {
+      return iter->second;
+   }
 
-   s.push("");
-   memo[""] = true;
+   long nCnt{};
+   for (auto strAvail : vAvail) {
+      if (strAvail.length() > strPattern.length())
+         continue;
 
-   bool bdebug = strPattern ==  "bbrgwb";
-   
-   while (not s.empty()) {
-      auto cur = s.top();
-      s.pop();
+      if (strPattern.starts_with(strAvail)) {
+         auto strNext = strPattern;
+         strNext.remove_prefix(strAvail.length());
 
-      if (cur == strPattern)
-         break;
-
-      for (const auto strAvail : vAvail) {
-         if (strAvail.length() + cur.length() > strPattern.length())
-            continue;
-
-         auto tmp = strPattern;
-         tmp.remove_prefix(strPattern.length() - cur.length());
-
-         std::string strNew = std::string{ strAvail } + std::string{ tmp };
-         assert(strNew.length() > tmp.length());
-         //std::cout << "Trying " << strNew << "\n";
-         
-         if (strPattern.ends_with(strNew)) {
-            memo[strNew] = true;
-            s.push(strNew);
-         } else {
-            memo[strNew] = false;
-         }
+         const auto nRet = get_possible_patterns(strNext, vAvail, memo);
+         nCnt += nRet;
       }
    }
-   const auto ret = memo[std::string{ strPattern }];
-   if (ret) {
-      std::cout << strPattern << " be possible\n";
-   }
-   return ret;
-   
 
+   memo[strPattern] = nCnt;
 
-
-   // if (strPattern.empty()) {
-   //    std::cout << "FOUND\n";
-   //    return true;
-   // }
-   // 
-   // std::cout << "Checking " << strPattern << ", depth = " << nDepth << "\n";
-   //
-   // for (auto [idx, strAvail] : vAvail 
-   //       | std::views::filter([strPattern](std::string_view strAvail) { return strAvail.length() <= strPattern.length(); })
-   //       | std::views::enumerate) 
-   // {
-   //    //std::cout << "Checking " << strPattern << " against " << strAvail << "[" << idx << "]\n";
-   //    if (strPattern.starts_with(strAvail)) {
-   //       auto strNext = strPattern;
-   //       strNext.remove_prefix(strAvail.length());
-   //       if (is_pattern_possible(strNext, vAvail, nDepth + 1)) {
-   //          return true;
-   //       }
-   //    }
-   // }
-   //
-   // return false;
+   return nCnt;
 }
 
-long part1(std::span<const std::string_view> vAvail, std::span<const std::string_view> vDesired) {
+template<int N>
+constexpr long solve(std::span<const std::string_view> vAvail, std::span<const std::string_view> vDesired) {
    return std::accumulate(vDesired.begin(), vDesired.end(), 0L,
          [vAvail](long acc, std::string_view strPattern) {
-            std::cout << strPattern << "\n";
-            return acc + static_cast<long>(is_pattern_possible(strPattern, vAvail));
+            std::unordered_map<std::string_view, long> memo;
+            memo[""sv] = 1;
+            if constexpr(N == 1)
+               return acc + (get_possible_patterns(strPattern, vAvail, memo) > 0 ? 1 : 0);
+            else
+               return acc + get_possible_patterns(strPattern, vAvail, memo);
          });
 }
 
@@ -102,8 +61,6 @@ int main() {
    std::ifstream f{ "input.txt" };
    const std::string strData{ std::istreambuf_iterator<char>{ f }, std::istreambuf_iterator<char>{} };
    f.close();
-
-   using namespace std::literals;
 
    std::string_view strAvailPatterns;
    std::string_view strDesiredPatterns;
@@ -135,6 +92,8 @@ int main() {
       return std::vector<std::string_view>{ tmp.begin(), tmp.end() };
    });
 
-   const auto nPart1 = part1(vAvail, vDesired);
+   const auto nPart1 = solve<1>(vAvail, vDesired);
    std::cout << "Result Part 1 = " << nPart1 << "\n";
+   const auto nPart2 = solve<2>(vAvail, vDesired);
+   std::cout << "Result Part 2 = " << nPart2 << "\n";
 }
