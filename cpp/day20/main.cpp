@@ -1,5 +1,5 @@
+#include <algorithm>
 #include <cassert>
-#include <format>
 #include <iostream>
 #include <map>
 #include <numeric>
@@ -48,13 +48,17 @@ std::ostream& operator<<(std::ostream& os, const sCoord& c) {
 struct sCheat {
    sCoord target{};
    int nSavings{};
+
+   bool operator<(const sCheat& rhs) const {
+      return target < rhs.target;
+   }
 };
 
 struct sTraverseInfo {
    sCoord pos{};
    sCoord prev{ -1, -1 };
    int nCost{};
-   std::vector<sCheat> vCheats{};
+   std::set<sCheat> sCheats{};
 
    bool operator<(const sTraverseInfo& rhs) const {
       return pos < rhs.pos;
@@ -134,71 +138,77 @@ auto find_path(std::span<std::string_view> vMap) {
    return sCache;
 }
 
-long part1(std::span<std::string_view> vMap) {
+template<int N, int LowerLimit>
+long solve(std::span<std::string_view> vMap) {
    const auto start = find_in_grid(vMap, 'S');
    const auto end = find_in_grid(vMap, 'E');
 
    std::map<int, std::size_t> mCheatOverview;
 
    auto sCache = find_path(vMap);
+
    auto iter = std::ranges::find_if(sCache, [end](const auto& p) { return p.pos == end; });
    auto prev_iter = sCache.end();
+   auto idx_point = 0;
+   const auto nSize = sCache.size();
    while (iter != sCache.end()) {
       const auto pos = iter->pos;
 
+      //std::cout << "On " << idx_point++ << "/" << nSize << "\n";
+
       auto node = sCache.extract(iter);
-      for (auto diff : {
-            sCoord{ 0, 1 },
-            sCoord{ -1, 0 },
-            sCoord{ 0, -1 },
-            sCoord{ 1, 0 }
-      })
-      {
-         const auto neighbor = pos + diff;
-         if (neighbor == prev_iter->pos or neighbor == node.value().prev)
-            continue;
 
-         assert(vMap[neighbor.y][neighbor.x] == '#');
+      for (int i = 2; i < N + 1; ++i) {
+         for (int y = 0; y < i + 1; ++y) {
+            for (int x = -(i - y); x < (i - y) + 1; ++x) {
+               if (abs(x)+abs(y) < i)
+                  continue;
+               const auto pt1 = pos + sCoord{ x, y };
+               const auto pt2 = pos + sCoord{ x, -y };
 
-         for (int i = 2; i < 3; ++i) {
-            const auto target = pos + (diff * i);
-            auto target_iter = std::ranges::find_if(sCache, [target](const auto& p) { return p.pos == target; });
-            if (target_iter == sCache.end()) {
-               continue;
+               std::array<sCoord, 2> arTargets{ pt1, pt2 };
+               std::array<decltype(sCache)::iterator, 2> arTargetIters{
+                  std::ranges::find_if(sCache, [&arTargets](const auto& p) { return p.pos == arTargets[0]; }),
+                  std::ranges::find_if(sCache, [&arTargets](const auto& p) { return p.pos == arTargets[1]; }),
+               };
+
+               for (auto target_iter : arTargetIters
+                     | std::views::filter([&sCache](auto iter) { return iter != sCache.end(); })
+                     | std::views::filter([&node, i](auto iter) { return (node.value().nCost - iter->nCost - i) > 0; }))
+               {
+                  sCheat cheat{};
+                  cheat.nSavings = node.value().nCost - target_iter->nCost - i;
+                  cheat.target = target_iter->pos;
+
+                  node.value().sCheats.insert(cheat);
+               }
             }
-            const auto tile = vMap[target.y][target.x];
-
-            sCheat cheat{};
-            cheat.nSavings = node.value().nCost - target_iter->nCost - i;
-            cheat.target = neighbor;
-            
-            node.value().vCheats.push_back(cheat);
          }
       }
 
       //std::cout << "Cheats at " << node.value().pos << "\n";
-      for (const auto& cheat : node.value().vCheats) {
+      for (const auto& cheat : node.value().sCheats) {
          // if (cheat.nSavings == 4)
          //    std::cout << cheat.target << " for a savings of " << cheat.nSavings << "\n";
          ++mCheatOverview[cheat.nSavings];
       }
 
-      iter = sCache.insert(iter, std::move(node));
+      iter = sCache.insert(sCache.end(), std::move(node));
+
       prev_iter = iter;
       iter = std::ranges::find_if(sCache, [iter](const auto& p) { return p.pos == iter->prev; });
    }
 
-   for (const auto [nSavings, nCount] : mCheatOverview) {
+   for (const auto [nSavings, nCount] : mCheatOverview | std::views::filter([](auto kvp) { return kvp.first >= LowerLimit; })) {
       std::cout << nCount << " cheats save " << nSavings << " picoseconds.\n";
    }
 
-   auto from_iter = mCheatOverview.lower_bound(100);
+   auto from_iter = mCheatOverview.lower_bound(LowerLimit);
    return std::accumulate(from_iter, mCheatOverview.end(), 0L,
          [](long acc, const auto& kvp) {
             return acc + static_cast<long>(kvp.second);
          });
 }
-
 
 int main() {
 //    const std::string strData = "###############\n\
@@ -228,6 +238,8 @@ int main() {
    
    std::vector<std::string_view> vInput{ tmp.begin(), tmp.end() };
 
-   const auto nPart1 = part1(vInput);
+   const auto nPart1 = solve<2, 100>(vInput);
    std::cout << "Result Part 1 = " << nPart1 << std::endl;
+   const auto nPart2 = solve<20, 100>(vInput);
+   std::cout << "Result Part 2 = " << nPart2 << std::endl;
 }
