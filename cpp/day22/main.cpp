@@ -55,9 +55,11 @@ struct std::hash<sSequence> {
 constexpr long part2(std::span<long> vInput) {
    std::unordered_map<sSequence, long> mSeqSums;
 
+   std::vector<std::pair<long, std::optional<long>>> vPrices;
+   vPrices.reserve(2000);
+
    for (auto n : vInput) {
-      std::vector<std::pair<long, std::optional<long>>> vPrices;
-      vPrices.reserve(2000);
+      vPrices.clear();
 
       std::optional<long> nPrev{};
       std::size_t nIdxSeqBegin{1};
