@@ -4,60 +4,60 @@ defmodule Day23 do
   def get_connected(conn_map, [comp | maybe_connected], output) do
     connected_to_comp = (conn_map[comp] 
       |> Enum.filter(& &1 in maybe_connected))
-    output = if length(connected_to_comp) > 0 do
-      [[comp | connected_to_comp] | output]
-    else
-      output
-    end
-    get_connected(conn_map, maybe_connected, output)
+      |> Enum.map(& [comp, &1])
+    get_connected(conn_map, maybe_connected, connected_to_comp ++ output)
   end
 
   def part1(input) do
     input
       |> Enum.flat_map(fn {comp, list_connected} ->
         get_connected(input, input[comp])
-          |> Enum.map(& [comp | &1]) 
+          |> Enum.map(& [comp | &1] |> Enum.sort) 
       end)
-      |> Enum.filter(&length(&1) == 3)
-      |> IO.inspect
-    42
+      |> Enum.uniq
+      |> Enum.filter(fn list ->
+        list
+          |> Enum.any?(&String.starts_with?(&1, "t"))
+      end)
+      |> Enum.count
   end 
 end
 
-input = """
-kh-tc
-qp-kh
-de-cg
-ka-co
-yn-aq
-qp-ub
-cg-tb
-vc-aq
-tb-ka
-wh-tc
-yn-cg
-kh-ub
-ta-co
-de-co
-tc-td
-tb-wq
-wh-td
-ta-ka
-td-qp
-aq-cg
-wq-ub
-ub-vc
-de-ta
-wq-aq
-wq-vc
-wh-yn
-ka-de
-kh-ta
-co-tc
-wh-qp
-tb-vc
-td-yn
-"""
+# input = """
+# kh-tc
+# qp-kh
+# de-cg
+# ka-co
+# yn-aq
+# qp-ub
+# cg-tb
+# vc-aq
+# tb-ka
+# wh-tc
+# yn-cg
+# kh-ub
+# ta-co
+# de-co
+# tc-td
+# tb-wq
+# wh-td
+# ta-ka
+# td-qp
+# aq-cg
+# wq-ub
+# ub-vc
+# de-ta
+# wq-aq
+# wq-vc
+# wh-yn
+# ka-de
+# kh-ta
+# co-tc
+# wh-qp
+# tb-vc
+# td-yn
+# """
+input = File.read!("input.txt")
   |> String.split("\n")
   |> Enum.filter(&String.length(&1) > 0)
   |> Enum.map(fn line ->
