@@ -21,42 +21,28 @@ defmodule Day23 do
       end)
       |> Enum.count
   end 
+
+  def part2(input) do
+    input
+      |> Enum.map(fn {comp, list_connected} ->
+        get_connected(input, input[comp])
+          |> Enum.flat_map(& [comp | &1] |> Enum.sort) 
+      end)
+      |> Enum.group_by(&hd/1)
+      |> Enum.filter(fn {_first, lists} ->
+        Enum.all?(lists, &length(&1) == length(hd(lists))) 
+      end)
+      |> Enum.max_by(fn {_comp, lists} ->
+        length(hd(lists))
+      end)
+      |> elem(1)
+      |> hd
+      |> Enum.uniq
+      |> Enum.sort
+      |> Enum.join(",")
+  end
 end
 
-# input = """
-# kh-tc
-# qp-kh
-# de-cg
-# ka-co
-# yn-aq
-# qp-ub
-# cg-tb
-# vc-aq
-# tb-ka
-# wh-tc
-# yn-cg
-# kh-ub
-# ta-co
-# de-co
-# tc-td
-# tb-wq
-# wh-td
-# ta-ka
-# td-qp
-# aq-cg
-# wq-ub
-# ub-vc
-# de-ta
-# wq-aq
-# wq-vc
-# wh-yn
-# ka-de
-# kh-ta
-# co-tc
-# wh-qp
-# tb-vc
-# td-yn
-# """
 input = File.read!("input.txt")
   |> String.split("\n")
   |> Enum.filter(&String.length(&1) > 0)
@@ -71,3 +57,5 @@ input = File.read!("input.txt")
 
 part1 = Day23.part1(input)
 IO.puts "Result Part 1 = #{part1}"
+part2 = Day23.part2(input)
+IO.puts "Result Part 2 = #{part2}"
