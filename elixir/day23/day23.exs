@@ -1,6 +1,6 @@
 defmodule Day23 do
   def get_connected(conn_map, input, output \\ [])
-  def get_connected(conn_map, [_comp], output), do: output
+  def get_connected(_conn_map, [_comp], output), do: output
   def get_connected(conn_map, [comp | maybe_connected], output) do
     connected_to_comp = (conn_map[comp] 
       |> Enum.filter(& &1 in maybe_connected))
@@ -10,7 +10,7 @@ defmodule Day23 do
 
   def part1(input) do
     input
-      |> Enum.flat_map(fn {comp, list_connected} ->
+      |> Enum.flat_map(fn {comp, _list_connected} ->
         get_connected(input, input[comp])
           |> Enum.map(& [comp | &1] |> Enum.sort) 
       end)
@@ -24,7 +24,7 @@ defmodule Day23 do
 
   def part2(input) do
     input
-      |> Enum.map(fn {comp, list_connected} ->
+      |> Enum.map(fn {comp, _list_connected} ->
         get_connected(input, input[comp])
           |> Enum.flat_map(& [comp | &1] |> Enum.sort) 
       end)
@@ -53,7 +53,6 @@ input = File.read!("input.txt")
     acc = Map.update(acc, a, [b], fn list -> [b | list] end)
     Map.update(acc, b, [a], fn list -> [a | list] end)
   end)
-  |> IO.inspect
 
 part1 = Day23.part1(input)
 IO.puts "Result Part 1 = #{part1}"
