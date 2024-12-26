@@ -63,7 +63,7 @@ int main() {
       for (auto nCol = 0z; nCol < vLines.front().size(); ++nCol) {
          std::size_t nColHeight{};
 
-         std::size_t nSearchRow = bLock ? 1 : vLines.size() - 2;
+         auto nSearchRow = bLock ? 1 : vLines.size() - 2;
 
          while (vLines[nSearchRow][nCol] == '#' and ((nSearchDir == 1 and nSearchRow < vLines.size()) or (nSearchDir == -1 and nSearchRow >= 0))) {
             ++nColHeight;
