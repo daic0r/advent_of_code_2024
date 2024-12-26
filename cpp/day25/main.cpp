@@ -29,14 +29,10 @@ std::ostream& operator<<(std::ostream& os, const KeyOrLock& kl) {
 }
 
 long part1(std::span<sKey> vKeys, std::span<sLock> vLocks) {
-   long nRet{};
-   for (const auto& lock : vLocks) {
-      nRet += std::ranges::count_if(vKeys, [&lock](const auto& key) {
-         return std::ranges::all_of(std::views::zip(lock.vColumnHeights, key.vColumnHeights),
-               [&key](const auto& tup) { return (std::get<0>(tup) + std::get<1>(tup)) <= key.nHeight; });
-      });
-   } 
-   return nRet;
+   return std::ranges::count_if(std::views::cartesian_product(vKeys, vLocks), [](const auto& tup) {
+      return std::ranges::all_of(std::views::zip(std::get<0>(tup).vColumnHeights, std::get<1>(tup).vColumnHeights),
+            [&tup](const auto& keyLockCols) { return (std::get<0>(keyLockCols) + std::get<1>(keyLockCols)) <= std::get<1>(tup).nHeight; });
+   });
 }
 
 int main() {
